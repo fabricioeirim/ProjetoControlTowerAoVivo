@@ -1,0 +1,40 @@
+# Bundle da Torre de Controle da Vértice: o job vertice_farol, o pipeline
+# vertice_medalhao (silver e gold) e, depois, o dashboard.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: vertice
+  uuid: b4d2d176-ea16-471a-97f7-cd4109f4a53d
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: catálogo do lakehouse (bronze, silver e gold)
+    default: lakehouse_vertice
+  warehouse_id:
+    description: SQL warehouse das sql_task (o Serverless Starter Warehouse)
+    default: e1bbedb15df0bab6
+  s3_access_key_id:
+    description: chave do data lake (o valor fica fora do Git)
+  s3_secret_access_key:
+    description: chave do data lake (o valor fica fora do Git)
+
+targets:
+  dev:
+    # Sem mode: development (ele prefixaria os nomes com [dev usuario]).
+    # O preset só garante que nenhum agendamento sai ligado do deploy de dev.
+    default: true
+    presets:
+      trigger_pause_status: PAUSED
+    workspace:
+      host: https://dbc-14e9e3cb-8c2c.cloud.databricks.com
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-14e9e3cb-8c2c.cloud.databricks.com
+      # We explicitly deploy to /Workspace/Users/fabricioeirim@gmail.com to make sure we only have a single copy.
+      root_path: /Workspace/Users/fabricioeirim@gmail.com/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: fabricioeirim@gmail.com
+        level: CAN_MANAGE

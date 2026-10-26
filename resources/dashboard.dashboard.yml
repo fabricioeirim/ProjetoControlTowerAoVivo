@@ -1,0 +1,11 @@
+# Dashboard do portfólio (AI/BI), lendo a gold.
+# O JSON é gerado por scripts/gerar_dashboard.py: edite o script, não o JSON.
+# As queries usam o nome puro das tabelas; catálogo e schema vêm daqui.
+resources:
+  dashboards:
+    dashboard_portfolio:
+      display_name: "Projeto Farol · Portfólio"
+      file_path: ./dashboard-portfolio.lvdash.json
+      dataset_catalog: ${var.catalog}
+      dataset_schema: gold
+      warehouse_id: ${var.warehouse_id}

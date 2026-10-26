@@ -1,0 +1,88 @@
+# Job vertice_farol: a Torre de Controle inteira, toda segunda às 6h.
+#
+#   ingestao_feriados ──┐
+#                       ├── conferencia_bronze ── medalhao ──┬── testes_de_qualidade
+#   ingestao_data_lake ─┘                                   └── status_com_ia
+#
+# 1. ingestao_feriados    notebook: feriados de 2026 da BrasilAPI → bronze.feriados
+# 2. ingestao_data_lake   notebook: baixa os arquivos do data lake (boto3) para o volume e recria as 9 tabelas da bronze
+# 3. conferencia_bronze   sql_task: confere as 9 contagens da bronze (seed 42); se faltar linha, o job para aqui
+# 4. medalhao             pipeline vertice_medalhao: silver (7 tabelas) e gold (3 tabelas)
+# 5. testes_de_qualidade  sql_task: 10 testes de integração e limpeza (raise_error se algum falhar)
+# 6. status_com_ia        sql_task: o texto do status vira coluna (regra, palavra-chave e IA nos últimos 90 dias)
+#
+# max_concurrent_runs: 1 porque duas execuções ao mesmo tempo apagariam a bronze uma da outra.
+# No target dev o agendamento fica pausado pelo preset trigger_pause_status do databricks.yml.
+resources:
+  jobs:
+    vertice_farol:
+      name: vertice_farol
+      tasks:
+        # 1 e 2. ingestão (noite 2), em paralelo
+        - task_key: ingestao_feriados
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/ingestao/ingestao_api.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: ingestao_data_lake
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            base_parameters:
+              AWS_ACCESS_KEY_ID: ${var.s3_access_key_id}
+              AWS_DEFAULT_REGION: us-east-1
+              AWS_SECRET_ACCESS_KEY: ${var.s3_secret_access_key}
+              S3_ENDPOINT: https://ssiyltdsapfnogwdtjpz.storage.supabase.co/storage/v1/s3
+            notebook_path: ../src/ingestao/ingestao_boto3.ipynb
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+
+        # 3. a bronze chegou inteira? (contagem do seed 42)
+        - task_key: conferencia_bronze
+          depends_on:
+            - task_key: ingestao_feriados
+            - task_key: ingestao_data_lake
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/conferencia/00-conferencia-bronze.sql
+
+        # 4. silver e gold no pipeline declarativo
+        - task_key: medalhao
+          depends_on:
+            - task_key: conferencia_bronze
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.vertice_medalhao.id}
+
+        # 5 e 6. depois do medalhão, em paralelo
+        - task_key: testes_de_qualidade
+          depends_on:
+            - task_key: medalhao
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/testes/testes.sql
+        - task_key: status_com_ia
+          depends_on:
+            - task_key: medalhao
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/ia/status_estruturado.sql
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      schedule:
+        # toda segunda às 6h (sem pause_status: no dev o preset pausa, no prod fica ativo)
+        quartz_cron_expression: 0 0 6 ? * MON
+        timezone_id: America/Sao_Paulo
+      timeout_seconds: 0
+      webhook_notifications: {}
