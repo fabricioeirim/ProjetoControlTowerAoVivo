@@ -26,34 +26,64 @@ A proposta foi construir uma solução de data platform para transformar esse ce
 A grande maioria das empresas não consegue acompanhar com clareza o status real dos seus projetos porque os dados ficam fragmentados em planilhas, listas de tarefas e sistemas de gestão.
 
 Sem uma visão integrada:
+
 - o acompanhamento fica manual e inconsistente,
 - o risco operacional cresce,
 - a margem do projeto se reduz,
 - e a tomada de decisão acontece sem dados confiáveis.
+
+## Impacto esperado
+
+A solução foi pensada para entregar valor real para negócios que precisam de previsibilidade e controle. Entre os principais impactos estão:
+
+- redução do esforço manual de acompanhamento;
+- melhor visibilidade do portfólio em um único lugar;
+- identificação precoce de atraso e risco;
+- suporte à tomada de decisão com base em dados;
+- melhoria no controle financeiro e operacional dos projetos.
 
 ## Solução
 
 O Projeto Control Tower ao Vivo foi pensado para consolidar esses dados em uma arquitetura moderna de dados, com foco em integração, limpeza, modelagem e analytics.
 
 A solução inclui:
-- ingestão de dados multifuente,
-- padronização e qualidade de dados,
-- modelagem em camadas bronze, silver e gold,
-- cálculo de KPIs de desempenho e risco,
-- IA para classificação de status e extração de contexto,
+
+- ingestão de dados multifuente;
+- padronização e qualidade de dados;
+- modelagem em camadas bronze, silver e gold;
+- cálculo de KPIs de desempenho e risco;
+- IA para classificação de status e extração de contexto;
 - dashboard analítico para monitoramento executivo.
 
 ## Arquitetura
 
 A arquitetura foi organizada em camadas:
 
-- Bronze: dados brutos e origem
-- Silver: limpeza, padronização e integração
-- Gold: modelo analítico pronto para consumo
-- IA: classificação e extração de contexto operacional
-- Dashboard: visualização dos principais indicadores
+- Bronze: dados brutos e origem;
+- Silver: limpeza, padronização e integração;
+- Gold: modelo analítico pronto para consumo;
+- IA: classificação e extração de contexto operacional;
+- Dashboard: visualização dos principais indicadores.
 
-## Stack
+## Workflow do projeto
+
+```text
+Dados brutos
+   ↓
+Ingestão multifuente
+   ↓
+Padronização e qualidade
+   ↓
+Camada Silver
+   ↓
+Modelagem Gold
+   ↓
+Indicadores de negócio
+   ↓
+Painel executivo + IA
+```
+
+## Stack tecnológica
 
 - Databricks
 - Unity Catalog / Lakehouse
@@ -143,7 +173,7 @@ databricks bundle deploy --target dev
 
 ## Status
 
-Em desenvolvimento, com foco em entrega de um case realista de engenharia de dados aplicado ao contexto de gestão de portfólio e tomada de decisão.
+Projeto em desenvolvimento com foco em entrega de um case realista de engenharia de dados aplicado ao contexto de gestão de portfólio e tomada de decisão.
 
 ## Autor
 
